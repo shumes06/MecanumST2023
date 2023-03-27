@@ -16,28 +16,12 @@ import com.qualcomm.robotcore.hardware.Blinker;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Core;
-import org.opencv.imgproc.Moments;
-import org.opencv.imgproc.Imgproc;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
-import org.openftc.easyopencv.OpenCvWebcam;
-
 import java.util.List;
 import java.util.ArrayList;
 
 @Autonomous
 
 public class OctoAuton extends LinearOpMode {
-    OpenCvWebcam webcam;
     DcMotor rightBack, leftBack, leftFront, rightFront;
     DcMotor leftLift, rightLift;
     Blinker control_Hub, expansion_Hub_2;
@@ -54,7 +38,6 @@ public class OctoAuton extends LinearOpMode {
         motorSetup();
         gyroSetup();
         miscSetup();
-        webcamSetup();
         
         delay(3000);
 
@@ -64,20 +47,14 @@ public class OctoAuton extends LinearOpMode {
             opModeIsActive();
             telemetry.addLine("ready!");
             telemetry.addData("Distance", getDistance(front));
-            telemetry.addData("Color", octoColor.maxColor);
             telemetry.addLine();
             telemetry.addLine("Colors: Heavy debug");
-            telemetry.addData("Green", octoColor.green);
-            telemetry.addData("Orange", octoColor.orange);
-            telemetry.addData("Purple", octoColor.purple);
             telemetry.update();
         }
         
         //power angle time
         waitForStart();
-        
-        int maxColor = octoColor.maxColor;
-        telemetry.addData("max color", maxColor);
+
         telemetry.update();
 
         lift(1, 1000);
@@ -108,21 +85,8 @@ public class OctoAuton extends LinearOpMode {
         //goAngle(1, 90, 1000);
         
         delay(1000);
-        
-        telemetry.addData("max color", maxColor);
+
         telemetry.update();
-        
-        if (maxColor == 1) {
-            goAngle(0.5, 0, 1550);
-            delay(500);
-            goAngle(0.5, 270, 1150);
-        } else if (maxColor == 2) {
-            goAngle(0.5, 0, 1750);
-        } else if (maxColor == 3) {
-            goAngle(0.5, 0, 1550);
-            delay(500);
-            goAngle(0.5, 90, 1500);
-        }
         
         delay(250);
         goAngle(0.5, 0, 500);
@@ -380,29 +344,6 @@ public class OctoAuton extends LinearOpMode {
         expansion_Hub_2.setConstant(color);
     }
     
-    void webcamSetup() {
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        
-        webcam.setPipeline(new octoColor());
-
-        webcam.setMillisecondsPermissionTimeout(2500); // Timeout for obtaining permission is configurable. Set before opening.
-        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
-            @Override
-            public void onOpened()
-            {
-                webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
-            }
-
-            @Override
-            public void onError(int errorCode)
-            {
-                
-            }
-        });
-    }
-    
     void motorSetup() {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -463,82 +404,4 @@ public class OctoAuton extends LinearOpMode {
     }
     
     // todo: write your code here
-}
-
-class octoColor extends OpenCvPipeline {
-    public static int maxColor = 0;
-    
-    Mat blurredImage = new Mat();
-    Mat hsvImage = new Mat();
-    
-    Mat thresh = new Mat();
-    
-    Mat output = new Mat();
-    
-    Mat dilated = new Mat();
-    Mat hierarchey = new Mat();
-    List<MatOfPoint> contours = new ArrayList<>();
-    
-    private double colorProcess(Mat input, Scalar minColor, Scalar maxColor, Scalar color) {
-        contours.clear();
-
-        output = input;
-        
-        Imgproc.blur(input, blurredImage, new Size(3, 3));
-        Imgproc.cvtColor(blurredImage, hsvImage, Imgproc.COLOR_BGR2HSV);
-        
-        Core.inRange(hsvImage, minColor, maxColor, thresh);     
-        
-        //return colorRange;
-        
-        //dilate the image, to make it better for the next step
-        //make the blobs bigger
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
-        Imgproc.dilate(thresh, dilated, kernel);
-        
-        //find the contours of the image
-        Imgproc.findContours(dilated, contours, hierarchey, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-        
-        Imgproc.drawContours(input, contours, -1, color, 1);
-        
-        double maxVal = 0;
-        int maxValIdx = 0;
-        if (!contours.isEmpty()) {
-            for (int contourIdx = 0; contourIdx < contours.size(); contourIdx++)
-            {
-                double contourArea = Imgproc.contourArea(contours.get(contourIdx));
-                if (maxVal < contourArea)
-                {
-                    maxVal = contourArea;
-                    maxValIdx = contourIdx;
-                }
-            }
-        } 
-        
-        return maxVal;
-    }
-    
-    public static double purple;
-    public static double green;
-    public static double orange;
-    
-    @Override 
-    public Mat processFrame(Mat input)
-    {
-        purple = colorProcess(input, new Scalar(0, 175, 10), new Scalar(30, 255, 75), new Scalar(0, 0, 255));
-        orange = colorProcess(input, new Scalar(94, 181, 88), new Scalar(110, 255, 214), new Scalar(255, 0, 0)) - 300;
-        green = colorProcess(input, new Scalar(40, 140, 40), new Scalar(80, 220, 110), new Scalar(0, 255, 0));
-        
-        if (orange > purple && orange > green) {
-            maxColor = 1;
-        } 
-        if (purple > orange && purple > green) {
-            maxColor = 2;
-        }
-        if (green > purple && green > orange) {
-            maxColor = 3;
-        }
-        
-        return input;
-    }
 }
