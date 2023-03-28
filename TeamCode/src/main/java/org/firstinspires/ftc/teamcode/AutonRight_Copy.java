@@ -14,7 +14,7 @@ import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 
 
-@Autonomous(name="AutonRight", group="Linear Opmode")
+@Autonomous(name="AutonRight_Copy", group="Linear Opmode")
 
 public class AutonRight_Copy extends LinearOpMode {
 
