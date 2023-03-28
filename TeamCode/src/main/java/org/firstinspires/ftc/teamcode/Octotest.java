@@ -96,7 +96,9 @@ public class Octotest extends LinearOpMode{
         if (headless)
         {
             stickAngle += angle*(Math.PI/180);
+            light(color.red);
         } else {
+            light(color.black);
         }
         
         rightFront.setPower((

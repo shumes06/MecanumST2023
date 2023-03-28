@@ -327,7 +327,9 @@ public class Arepikov_Mechanum_Teleop extends LinearOpMode{
         if (headless)
         {
             robotAngle += actualAngle*(Math.PI/180);
+            light(color.red);
         } else {
+            light(color.black);
         }
         
         servoPower();
@@ -353,6 +355,7 @@ public class Arepikov_Mechanum_Teleop extends LinearOpMode{
         {
             while (Math.abs(actualAngle) >= 2)
             {
+                light(color.lightBlue);
                 opModeIsActive();
                 
                 if (actualAngle <= 0)
@@ -380,6 +383,7 @@ public class Arepikov_Mechanum_Teleop extends LinearOpMode{
         //if not within 10 degrees at start
         while (Math.abs(actualAngle) >= 20)
         {
+            light(color.darkBlue);;
             opModeIsActive();
             
             if (actualAngle <= 0)
