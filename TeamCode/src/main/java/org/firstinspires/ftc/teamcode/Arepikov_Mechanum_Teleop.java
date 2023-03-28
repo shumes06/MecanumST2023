@@ -311,7 +311,7 @@ public class Arepikov_Mechanum_Teleop extends LinearOpMode{
         if (gamepad2.dpad_down) intake.setPower(-0.6);
         else if (gamepad2.left_trigger >= 0.25) intake.setPower(0.6);
         else intake.setPower(0);
-    }//j
+    }
 
     void generalPower() {
         //0 - 3: drivetrain
