@@ -8,18 +8,15 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 @TeleOp
 public class spencerBotTest extends LinearOpMode{
     private DcMotor rightFront, rightBack, leftFront, leftBack;
-    public boolean isMotorSetup = false;
 
     @Override
     public void runOpMode(){
     motorSetup();
-    telemetry.addData("Motor Status", isMotorSetup);
-    telemetry.update();
     waitForStart();
     operation();
     }
 
-    public boolean motorSetup(){
+    public void motorSetup(){
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -36,19 +33,17 @@ public class spencerBotTest extends LinearOpMode{
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        return isMotorSetup;
     }
     public void drivePower(){
         double translX = gamepad1.left_stick_x;
         double translY = -gamepad1.left_stick_y;
         double rot = gamepad1.right_stick_x;
 
-        leftFront.setPower(translY + rot);
-        leftBack.setPower(translY + rot);
+        leftFront.setPower(translY + rot + translX);
+        leftBack.setPower(translY - rot + translX);
 
-        rightFront.setPower(translY - rot);
-        rightBack.setPower(translY - rot);
+        rightFront.setPower(translY - rot - translX);
+        rightBack.setPower(translY + rot - translX);
     }
     public void operation(){
         while(opModeIsActive()){
